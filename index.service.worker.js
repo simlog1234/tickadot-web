@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1790490764|3029522';
+const CACHE_VERSION = '1790491579|3101023';
 /** @type {string} */
 const CACHE_PREFIX = 'TickaDot-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
