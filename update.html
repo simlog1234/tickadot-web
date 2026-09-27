@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TickaDot 업데이트</title>
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f6f7f2; color: #234139; font-family: system-ui, sans-serif; }
+  main { max-width: 360px; padding: 28px; text-align: center; }
+  p { white-space: pre-line; line-height: 1.7; }
+  button { border: 0; border-radius: 12px; padding: 12px 24px; background: #217c64; color: white; font: inherit; cursor: pointer; }
+  [hidden] { display: none; }
+</style>
+<main>
+  <h1>TickaDot 업데이트</h1>
+  <p id="notice" role="status">최신 버전을 확인하고 있어요…</p>
+  <p>저장한 목표와 완료 기록은 그대로 유지됩니다.</p>
+  <button id="retry" hidden onclick="location.reload()">다시 확인</button>
+</main>
+<script src="update.js"></script>
+<script>
+  (async () => {
+    const notice = document.getElementById('notice');
+    const retry = document.getElementById('retry');
+    try {
+      if (!navigator.locks) throw new Error('Web Locks unavailable');
+      await navigator.locks.request('tickadot-userfs', {ifAvailable: true}, async lock => {
+        if (!lock) {
+          notice.textContent = '다른 TickaDot 탭이나 앱을 닫은 뒤\n아래 버튼을 눌러 주세요.';
+          retry.hidden = false;
+          return;
+        }
+        await TickaDotUpdate({required: true, notice: text => { notice.textContent = text; }});
+        location.replace('index.html');
+      });
+    } catch (error) {
+      notice.textContent = '업데이트를 확인하지 못했어요.\n인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
+      retry.hidden = false;
+    }
+  })();
+</script>
+</html>

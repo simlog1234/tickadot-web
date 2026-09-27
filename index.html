@@ -33,6 +33,7 @@
     <button id="retry" hidden onclick="location.reload()">다시 열기</button>
   </div>
   <noscript>TickaDot을 사용하려면 브라우저에서 JavaScript를 허용해 주세요.</noscript>
+  <script src="update.js"></script>
   <script src="index.js"></script>
   <script>
     (async () => {
@@ -67,6 +68,10 @@
         await navigator.locks.request('tickadot-userfs', {ifAvailable: true}, async (lock) => {
           if (!lock) {
             explain('TickaDot이 다른 창에서 열려 있습니다.\n기록 보호를 위해 한 번에 한 창만 사용할 수 있어요.\n다른 창을 닫은 뒤 다시 열어 주세요.');
+            return;
+          }
+          if (await TickaDotUpdate({notice: text => { notice.textContent = text; }})) {
+            location.reload();
             return;
           }
           const engine = new Engine({"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":10094892,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"});
