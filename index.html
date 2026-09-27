@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>TickaDot</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #f6f7f2; }
+    body { color: #234139; font-family: system-ui, sans-serif; touch-action: none; }
+    #canvas { display: block; outline: none; }
+    #status { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; background: #f6f7f2; text-align: center; }
+    #status-title { font-size: 24px; font-weight: 700; }
+    #status-notice { white-space: pre-line; line-height: 1.7; max-width: 360px; }
+    progress { width: min(280px, 80vw); accent-color: #217c64; }
+    button { padding: 12px 24px; border: 0; border-radius: 12px; background: #217c64; color: white; font: inherit; cursor: pointer; }
+    [hidden] { display: none !important; }
+  </style>
+  <link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<link rel="manifest" href="index.manifest.json">
+<meta name="theme-color" content="#f6f7f2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TickaDot">
+<script>document.documentElement.lang = 'ko';</script>
+</head>
+<body>
+  <canvas id="canvas" aria-label="TickaDot 목표 기록 앱">이 브라우저에서는 앱 화면을 표시할 수 없습니다.</canvas>
+  <div id="status" role="status" aria-live="polite">
+    <div id="status-title">TickaDot</div>
+    <div id="status-notice">작은 실천을 준비하고 있어요…<br>처음 실행할 때는 잠시 시간이 걸립니다.</div>
+    <progress id="status-progress"></progress>
+    <button id="retry" hidden onclick="location.reload()">다시 열기</button>
+  </div>
+  <noscript>TickaDot을 사용하려면 브라우저에서 JavaScript를 허용해 주세요.</noscript>
+  <script src="index.js"></script>
+  <script>
+    (async () => {
+      // Keep the address identical to the PWA's cached launch document.
+      if (location.pathname.endsWith('/')) {
+        const target = new URL('index.html', location.href);
+        target.search = location.search;
+        target.hash = location.hash;
+        location.replace(target.href);
+        return;
+      }
+      const status = document.getElementById('status');
+      const notice = document.getElementById('status-notice');
+      const progress = document.getElementById('status-progress');
+      const retry = document.getElementById('retry');
+      function explain(message) {
+        notice.textContent = message;
+        progress.hidden = true;
+        retry.hidden = false;
+      }
+      if (!navigator.locks) {
+        explain('기록을 안전하게 저장할 수 있는 브라우저가 필요합니다.\nHTTPS 주소에서 최신 Safari 또는 Chrome으로 열어 주세요.');
+        return;
+      }
+      if (Engine.getMissingFeatures({threads: false}).length) {
+        explain('이 브라우저에서는 앱을 실행할 수 없습니다.\n최신 Safari 또는 Chrome으로 다시 열어 주세요.');
+        return;
+      }
+      try {
+        // Godot keeps a separate in-memory filesystem in each tab. Acquire the
+        // origin-wide lock BEFORE initializing it, so stale tabs cannot save.
+        await navigator.locks.request('tickadot-userfs', {ifAvailable: true}, async (lock) => {
+          if (!lock) {
+            explain('TickaDot이 다른 창에서 열려 있습니다.\n기록 보호를 위해 한 번에 한 창만 사용할 수 있어요.\n다른 창을 닫은 뒤 다시 열어 주세요.');
+            return;
+          }
+          const engine = new Engine({"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":10087204,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"});
+          await engine.startGame({onProgress(current, total) {
+            if (total > 0) { progress.max = total; progress.value = current; }
+            else progress.removeAttribute('value');
+          }});
+          status.remove();
+          // Closing/reloading this document releases its lock automatically.
+          await new Promise(() => {});
+        });
+      } catch (error) {
+        console.error(error);
+        explain('앱을 불러오지 못했습니다.\n인터넷 연결과 브라우저의 사이트 데이터 저장 설정을 확인한 뒤 다시 열어 주세요.');
+      }
+    })();
+  </script>
+</body>
+</html>
+
